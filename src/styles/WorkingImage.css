@@ -1,0 +1,29 @@
+.imgSmall {
+  position: absolute;
+  max-height: 50%;
+  max-width: 70%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}
+
+.imgMed {
+  position: absolute;
+  max-height: 60%;
+  max-width: 70%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}
+
+.imgLarge {
+  position: absolute;
+  max-height: 75%;
+  max-width: 85%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.5;
+}

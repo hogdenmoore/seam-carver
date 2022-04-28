@@ -1,0 +1,24 @@
+.App {
+  background-color: #1e90ff;
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+.header {
+  padding: 15px;
+  text-align: left;
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+  position: relative;
+  border-bottom: 2px solid rgb(161, 160, 160);
+  height: 10vh;
+  box-sizing: border-box;
+}
+.fa-scissors {
+  color: white;
+  transform: rotate(140deg);
+  font-size: 25px;
+  position: absolute;
+  top: 3px;
+}

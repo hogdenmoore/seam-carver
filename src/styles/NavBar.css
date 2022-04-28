@@ -1,0 +1,17 @@
+.navbar {
+  background-color: #1e90ff;
+  width: 15vw;
+  height: 90vh;
+  position: fixed;
+}
+button {
+  background-color: #1e90ff;
+  border: 2px solid rgb(161, 160, 160);
+  width: 90%;
+  height: 40px;
+  margin: 5px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
