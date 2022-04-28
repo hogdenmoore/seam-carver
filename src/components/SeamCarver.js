@@ -56,7 +56,6 @@ const SeamCarver = () => {
 
     const w = srcImg.width;
     const h = srcImg.height;
-    console.log(w, h);
 
     canvas.width = w;
     canvas.height = h;
@@ -76,17 +75,25 @@ const SeamCarver = () => {
 
     let twoDData = toTwoDData({ imgdata, w, h });
 
-    let { lowestSeam, totalEnergyMap } = findFirstSeam({ twoDData });
+    let { lowestSeam, energyMap } = findFirstSeam({ twoDData });
 
-    const onIteration = async (lowestSeam, totalEnergyMap, twoDData, data) => {
+    const onIteration = async (energyMap, lowestSeam, twoDData, data) => {
+      let start = Date.now();
+
       let dataWithSeam = await drawSeam({ lowestSeam, data, w, h });
       let seamImage = new ImageData(new Uint8ClampedArray(dataWithSeam), w, h);
       context.putImageData(seamImage, 0, 0, 0, 0, w, h);
 
-      let { dataWithRemovedSeam, nextenergy, nexttwoD } = removeSeam({
+      let delta = Date.now() - start;
+      console.log(delta);
+
+      start = Date.now();
+
+      let { dataWithRemovedSeam, nexttwoD, nextEnergyMap } = removeSeam({
         lowestSeam,
-        totalEnergyMap,
         twoDData,
+        energyMap,
+        w,
       });
 
       await wait(1);
@@ -99,20 +106,27 @@ const SeamCarver = () => {
 
       context.putImageData(dataWithRemovedSeamImage, 0, 0, 0, 0, w, h);
       twoDData = nexttwoD;
-      let { lowestSeam: nextLowestSeam, totalEnergyMap: nextEnergyMap } =
-        findFirstSeam({ twoDData });
-
-      return { nextLowestSeam, nextEnergyMap, nexttwoD, dataWithRemovedSeam };
+      start = Date.now();
+      let { nextLowestSeam, energyMapToReturn } = findNextSeam(nextEnergyMap);
+      delta = Date.now() - start;
+      console.log(delta);
+      return {
+        nextLowestSeam,
+        energyMapToReturn,
+        nexttwoD,
+        dataWithRemovedSeam,
+      };
     };
-    let s = 5;
+    let s = 500;
 
     while (s > 0) {
-      let { nextLowestSeam, nextEnergyMap, nexttwoD, dataWithRemovedSeam } =
-        await onIteration(lowestSeam, totalEnergyMap, twoDData, imgdata);
+      let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
+        await onIteration(energyMap, lowestSeam, twoDData, imgdata);
       lowestSeam = nextLowestSeam;
-      totalEnergyMap = nextEnergyMap;
       twoDData = nexttwoD;
       imgdata = dataWithRemovedSeam;
+      energyMap = energyMapToReturn;
+      s -= 1;
     }
   };
 
