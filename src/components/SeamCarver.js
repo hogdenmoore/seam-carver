@@ -5,17 +5,21 @@ import WorkingImage from "./WorkingImage";
 import WorkingCanvas from "./WorkingCanvas";
 import initialImage from "../balloons.jpg";
 import {
-  findFirstSeam,
-  findNextSeam,
+  findFirstVerticalSeam,
+  findNextVerticalSeam,
+  findFirstHorizontalSeam,
+  findNextHorizontalSeam,
+  drawHorizontalSeam,
   toTwoDData,
-  drawSeam,
-  removeSeam,
-} from "../utilities/resizingAlgorithms";
-import { wait } from "../utilities/wait";
+  drawVerticalSeam,
+  removeVerticalSeam,
+  removeHorizontalSeam,
+} from "../utils/resizingAlgorithms";
+import { wait } from "../utils/wait";
 
 const SeamCarver = () => {
   const defaultWidthScale = 50;
-  const defaultHeightScale = 70;
+  const defaultHeightScale = 50;
 
   const [initialImg, setInitialImg] = useState(null);
   const [imageSize, setImageSize] = useState("imgLarge");
@@ -70,31 +74,28 @@ const SeamCarver = () => {
     const newDataimg = context.getImageData(0, 0, w, h);
     let imgdata = newDataimg.data;
 
-    const toWidth = Math.floor((toWidthScale * w) / 100);
-    const toHeight = Math.floor((toHeightScale * h) / 100);
-
     let twoDData = toTwoDData({ imgdata, w, h });
 
-    let { lowestSeam, energyMap } = findFirstSeam({ twoDData });
+    let { lowestSeam, energyMap } = findFirstVerticalSeam({ twoDData });
 
-    const onIteration = async (energyMap, lowestSeam, twoDData, data) => {
-      let start = Date.now();
-
-      let dataWithSeam = await drawSeam({ lowestSeam, data, w, h });
+    const onVerticalIteration = async (
+      energyMap,
+      lowestSeam,
+      twoDData,
+      data
+    ) => {
+      let dataWithSeam = drawVerticalSeam({ lowestSeam, data, w, h });
       let seamImage = new ImageData(new Uint8ClampedArray(dataWithSeam), w, h);
       context.putImageData(seamImage, 0, 0, 0, 0, w, h);
 
-      let delta = Date.now() - start;
-      console.log(delta);
-
-      start = Date.now();
-
-      let { dataWithRemovedSeam, nexttwoD, nextEnergyMap } = removeSeam({
-        lowestSeam,
-        twoDData,
-        energyMap,
-        w,
-      });
+      let { dataWithRemovedSeam, nexttwoD, nextEnergyMap } = removeVerticalSeam(
+        {
+          lowestSeam,
+          twoDData,
+          energyMap,
+          w,
+        }
+      );
 
       await wait(1);
 
@@ -106,10 +107,9 @@ const SeamCarver = () => {
 
       context.putImageData(dataWithRemovedSeamImage, 0, 0, 0, 0, w, h);
       twoDData = nexttwoD;
-      start = Date.now();
-      let { nextLowestSeam, energyMapToReturn } = findNextSeam(nextEnergyMap);
-      delta = Date.now() - start;
-      console.log(delta);
+      let { nextLowestSeam, energyMapToReturn } =
+        findNextVerticalSeam(nextEnergyMap);
+
       return {
         nextLowestSeam,
         energyMapToReturn,
@@ -117,16 +117,85 @@ const SeamCarver = () => {
         dataWithRemovedSeam,
       };
     };
-    let s = 500;
+    let toWidth = w - Math.floor((toWidthScale * w) / 100);
 
-    while (s > 0) {
+    while (toWidth > 0) {
       let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
-        await onIteration(energyMap, lowestSeam, twoDData, imgdata);
+        await onVerticalIteration(energyMap, lowestSeam, twoDData, imgdata);
       lowestSeam = nextLowestSeam;
       twoDData = nexttwoD;
       imgdata = dataWithRemovedSeam;
       energyMap = energyMapToReturn;
-      s -= 1;
+      toWidth -= 1;
+    }
+
+    let newWidth = Math.floor((toWidthScale * w) / 100);
+
+    //
+    //
+    //
+    //
+
+    let twoDDataH = toTwoDData({ imgdata, w, h });
+
+    let { lowestSeamH, energyMapH } = findFirstHorizontalSeam({ twoDDataH });
+
+    const onHorizontalIteration = async (
+      energyMap,
+      lowestSeam,
+      twoDData,
+      data
+    ) => {
+      let dataWithSeam = drawHorizontalSeam({ lowestSeam, data, w, newWidth });
+
+      let seamImage = new ImageData(new Uint8ClampedArray(dataWithSeam), w, h);
+      context.putImageData(seamImage, 0, 0, 0, 0, w, h);
+
+      let { dataWithRemovedSeam, nexttwoD, nextEnergyMap } =
+        removeHorizontalSeam({
+          lowestSeam,
+          twoDData,
+          energyMap,
+          h,
+        });
+
+      await wait(1);
+
+      let dataWithRemovedSeamImage = new ImageData(
+        new Uint8ClampedArray(dataWithRemovedSeam),
+        w,
+        h
+      );
+
+      context.putImageData(dataWithRemovedSeamImage, 0, 0, 0, 0, w, h);
+      twoDData = nexttwoD;
+
+      let { nextLowestSeam, energyMapToReturn } =
+        findNextHorizontalSeam(nextEnergyMap);
+
+      return {
+        nextLowestSeam,
+        energyMapToReturn,
+        nexttwoD,
+        dataWithRemovedSeam,
+      };
+    };
+
+    let toHeight = h - Math.floor((toHeightScale * h) / 100);
+
+    while (toHeight > 0) {
+      let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
+        await onHorizontalIteration(
+          energyMapH,
+          lowestSeamH,
+          twoDDataH,
+          imgdata
+        );
+      lowestSeamH = nextLowestSeam;
+      twoDDataH = nexttwoD;
+      imgdata = dataWithRemovedSeam;
+      energyMapH = energyMapToReturn;
+      toHeight -= 1;
     }
   };
 
