@@ -1,0 +1,22 @@
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+.changeWidth {
+  position: absolute;
+  top: 7.5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+}
+
+.changeHeight {
+  position: absolute;
+  top: 50%;
+  left: 7.5%;
+  transform: translate(-50%, -50%);
+  color: white;
+}

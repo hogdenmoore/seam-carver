@@ -1,6 +1,7 @@
 import "../styles/SeamCarver.css";
 import { useState, useEffect, useRef } from "react";
 import NavBar from "./NavBar";
+import ToSize from "./ToSize";
 import WorkingImage from "./WorkingImage";
 import WorkingCanvas from "./WorkingCanvas";
 import initialImage from "../balloons.jpg";
@@ -26,6 +27,9 @@ const SeamCarver = () => {
   const [canvasStaging, setCanvasStaging] = useState(false);
   const [toWidthScale, setToWidthScale] = useState(defaultWidthScale);
   const [toHeightScale, setToHeightScale] = useState(defaultHeightScale);
+  const [currentHeight, setCurrentHeight] = useState(null);
+  const [currentWidth, setCurrentWidth] = useState(null);
+  const [isMoving, setIsMoving] = useState(1);
 
   const imgRef = useRef();
   const canvasRef = useRef();
@@ -33,6 +37,8 @@ const SeamCarver = () => {
   useEffect(() => {
     function updateSize() {
       setCanvasStaging(false);
+      setCurrentHeight(null);
+      setCurrentWidth(null);
     }
     window.addEventListener("resize", updateSize);
     return () => {
@@ -40,13 +46,29 @@ const SeamCarver = () => {
       setCanvasStaging(true);
     };
   });
+  useEffect(() => {
+    async function setSize() {
+      await wait(100);
+      setCurrentHeight(imgRef.current.height);
+      setCurrentWidth(imgRef.current.width);
+    }
+    if (imgRef.current != undefined) {
+      setSize();
+    }
+  }, [initialImg]);
 
   const onPictureClick = async () => {
-    setInitialImg(initialImage);
-    setCanvasStaging(true);
+    if (isMoving === 1) {
+      setInitialImg(initialImage);
+      setCanvasStaging(true);
+    }
   };
 
   const resize = async () => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
+    setIsMoving(2);
     setInitialImg(null);
     const srcImg = imgRef.current;
     if (!srcImg) {
@@ -118,7 +140,7 @@ const SeamCarver = () => {
       };
     };
     let toWidth = w - Math.floor((toWidthScale * w) / 100);
-
+    let removed = 1;
     while (toWidth > 0) {
       let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
         await onVerticalIteration(energyMap, lowestSeam, twoDData, imgdata);
@@ -127,6 +149,8 @@ const SeamCarver = () => {
       imgdata = dataWithRemovedSeam;
       energyMap = energyMapToReturn;
       toWidth -= 1;
+      setCurrentWidth(w - removed);
+      removed += 1;
     }
 
     let newWidth = Math.floor((toWidthScale * w) / 100);
@@ -182,7 +206,7 @@ const SeamCarver = () => {
     };
 
     let toHeight = h - Math.floor((toHeightScale * h) / 100);
-
+    removed = 1;
     while (toHeight > 0) {
       let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
         await onHorizontalIteration(
@@ -196,13 +220,32 @@ const SeamCarver = () => {
       imgdata = dataWithRemovedSeam;
       energyMapH = energyMapToReturn;
       toHeight -= 1;
+      setCurrentHeight(h - removed);
+      removed += 1;
     }
+    setIsMoving(3);
   };
 
-  const onFinish = () => {};
-
+  const resetStates = () => {
+    if (isMoving === 3 || isMoving === 1) {
+      setInitialImg(null);
+      setImageSize("imgLarge");
+      setCanvasStaging(false);
+      setCurrentHeight(null);
+      setCurrentWidth(null);
+      setIsMoving(1);
+    }
+  };
+  const uploadFile = (event) => {
+    setInitialImg(URL.createObjectURL(event.target.files[0]));
+  };
   const navbar = (
-    <NavBar createCanvas={resize} onPictureClick={onPictureClick}></NavBar>
+    <NavBar
+      resetAll={resetStates}
+      createCanvas={resize}
+      onPictureClick={onPictureClick}
+      uploadPhoto={uploadFile}
+    ></NavBar>
   );
 
   const originalImage = initialImg ? (
@@ -218,10 +261,58 @@ const SeamCarver = () => {
     </WorkingCanvas>
   ) : null;
 
+  const onChangeHeight = (event) => {
+    if (event.target.value > 100) {
+      setToHeightScale(100);
+    } else if (event.target.value < 0) {
+      setToHeightScale(0);
+    } else {
+      setToHeightScale(event.target.value);
+    }
+  };
+
+  const onChangeWidth = (event) => {
+    if (event.target.value > 100) {
+      setToWidthScale(100);
+    } else if (event.target.value < 0) {
+      setToWidthScale(0);
+    } else {
+      setToWidthScale(event.target.value);
+    }
+  };
+
+  const resizeButtons = (
+    <div>
+      <ToSize
+        heightVal={toHeightScale}
+        widthVal={toWidthScale}
+        onChangeHeight={onChangeHeight}
+        onChangeWidth={onChangeWidth}
+      ></ToSize>
+    </div>
+  );
+
+  const currentSizes =
+    currentWidth == null ? (
+      <div className="sizes">
+        Current Width: 0 (px)
+        <br />
+        Current Height: 0 (px)
+      </div>
+    ) : (
+      <div className="sizes">
+        Current Width: {currentWidth} (px)
+        <br />
+        Current Height: {currentHeight} (px)
+      </div>
+    );
+
   return (
     <div className="main">
       {navbar}
       <div className="stage">
+        {currentSizes}
+        {resizeButtons}
         {originalImage}
         {workingCanvas}
       </div>

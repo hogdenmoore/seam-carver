@@ -1,12 +1,16 @@
 import "../styles/NavBar.css";
 
-const NavBar = ({ onPictureClick, createCanvas }) => {
+const NavBar = ({ uploadPhoto, onPictureClick, createCanvas, resetAll }) => {
   return (
     <div className="navbar">
       <button onClick={createCanvas}>Resize</button>
-      <button>Upload</button>
-      <button>Download</button>
-      <button onClick={onPictureClick}>Pictures</button>
+
+      <button onClick={onPictureClick}>Default Picture</button>
+      <button onClick={resetAll}>Clear</button>
+      <label className="upload">
+        <input type="file" onChange={uploadPhoto} />
+        Upload
+      </label>
     </div>
   );
 };

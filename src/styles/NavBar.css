@@ -15,3 +15,31 @@ button {
   font-weight: bold;
   color: white;
 }
+
+input[type="file"] {
+  display: none;
+}
+
+.upload {
+  background-color: #1e90ff;
+  border: 2px solid rgb(161, 160, 160);
+  width: 88%;
+  height: 31px;
+  margin: 5px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  transition: 0.3s;
+  position: absolute;
+  left: 0px;
+  top: 150px;
+  text-align: center;
+  padding-top: 7px;
+}
+label:hover {
+  background-color: #397cbf;
+}
+button:hover {
+  background-color: #397cbf;
+}
