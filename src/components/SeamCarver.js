@@ -20,7 +20,7 @@ import { wait } from "../utils/wait";
 
 const SeamCarver = () => {
   const defaultWidthScale = 50;
-  const defaultHeightScale = 50;
+  const defaultHeightScale = 70;
 
   const [initialImg, setInitialImg] = useState(null);
   const [imageSize, setImageSize] = useState("imgLarge");
@@ -30,15 +30,18 @@ const SeamCarver = () => {
   const [currentHeight, setCurrentHeight] = useState(null);
   const [currentWidth, setCurrentWidth] = useState(null);
   const [isMoving, setIsMoving] = useState(1);
+  const [tutorial, setTutorial] = useState(false);
 
   const imgRef = useRef();
   const canvasRef = useRef();
 
   useEffect(() => {
     function updateSize() {
-      setCanvasStaging(false);
-      setCurrentHeight(null);
-      setCurrentWidth(null);
+      if (imgRef.current !== null) {
+        setCanvasStaging(false);
+        setCurrentHeight(imgRef.current.height);
+        setCurrentWidth(imgRef.current.width);
+      }
     }
     window.addEventListener("resize", updateSize);
     return () => {
@@ -155,11 +158,6 @@ const SeamCarver = () => {
 
     let newWidth = Math.floor((toWidthScale * w) / 100);
 
-    //
-    //
-    //
-    //
-
     let twoDDataH = toTwoDData({ imgdata, w, h });
 
     let { lowestSeamH, energyMapH } = findFirstHorizontalSeam({ twoDDataH });
@@ -237,7 +235,9 @@ const SeamCarver = () => {
     }
   };
   const uploadFile = (event) => {
-    setInitialImg(URL.createObjectURL(event.target.files[0]));
+    if (isMoving === 3 || isMoving === 1) {
+      setInitialImg(URL.createObjectURL(event.target.files[0]));
+    }
   };
   const navbar = (
     <NavBar
@@ -262,9 +262,9 @@ const SeamCarver = () => {
   ) : null;
 
   const onChangeHeight = (event) => {
-    if (event.target.value > 100) {
+    if (event.target.value >= 100) {
       setToHeightScale(100);
-    } else if (event.target.value < 0) {
+    } else if (event.target.value <= 0) {
       setToHeightScale(0);
     } else {
       setToHeightScale(event.target.value);
@@ -272,18 +272,51 @@ const SeamCarver = () => {
   };
 
   const onChangeWidth = (event) => {
-    if (event.target.value > 100) {
+    if (event.target.value >= 100) {
       setToWidthScale(100);
-    } else if (event.target.value < 0) {
+    } else if (event.target.value <= 0) {
       setToWidthScale(0);
     } else {
       setToWidthScale(event.target.value);
     }
   };
 
+  const increaseHeightScale = (event) => {
+    if (toHeightScale >= 100) {
+      setToHeightScale(100);
+    } else {
+      setToHeightScale(toHeightScale + 1);
+    }
+  };
+  const decreaseHeightScale = (event) => {
+    if (toHeightScale <= 0) {
+      setToHeightScale(0);
+    } else {
+      setToHeightScale(toHeightScale - 1);
+    }
+  };
+  const increaseWidthScale = (event) => {
+    if (toWidthScale >= 100) {
+      setToHeightScale(100);
+    } else {
+      setToWidthScale(toWidthScale + 1);
+    }
+  };
+  const decreaseWidthScale = (event) => {
+    if (toWidthScale <= 0) {
+      setToHeightScale(0);
+    } else {
+      setToWidthScale(toWidthScale - 1);
+    }
+  };
+
   const resizeButtons = (
     <div>
       <ToSize
+        increaseHeight={increaseHeightScale}
+        decreaseHeight={decreaseHeightScale}
+        increaseWidth={increaseWidthScale}
+        decreaseWidth={decreaseWidthScale}
         heightVal={toHeightScale}
         widthVal={toWidthScale}
         onChangeHeight={onChangeHeight}

@@ -1,9 +1,22 @@
 import "../styles/ToSize.css";
 
 const ToSize = (props) => {
-  let { heightVal, widthVal, onChangeHeight, onChangeWidth } = props;
+  let {
+    increaseHeight,
+    decreaseHeight,
+    increaseWidth,
+    decreaseWidth,
+    heightVal,
+    widthVal,
+    onChangeHeight,
+    onChangeWidth,
+  } = props;
+
   return (
     <div>
+      <button className="upButton" onClick={increaseHeight}>
+        <i className="fa fa-angle-up fa-3x"></i>
+      </button>
       <div className="changeWidth">
         <input
           type="number"
@@ -14,6 +27,13 @@ const ToSize = (props) => {
         ></input>
         %
       </div>
+      <button className="downButton" onClick={decreaseHeight}>
+        <i className="fa fa-angle-down fa-3x"></i>
+      </button>
+
+      <button className="leftButton" onClick={decreaseWidth}>
+        <i className="fa fa-angle-left fa-3x"></i>
+      </button>
       <div className="changeHeight">
         <input
           type="number"
@@ -24,6 +44,9 @@ const ToSize = (props) => {
         ></input>
         %
       </div>
+      <button className="rightButton" onClick={increaseWidth}>
+        <i className="fa fa-angle-right fa-3x"></i>
+      </button>
     </div>
   );
 };
