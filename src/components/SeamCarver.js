@@ -235,7 +235,7 @@ const SeamCarver = () => {
     }
   };
   const uploadFile = (event) => {
-    if (isMoving === 3 || isMoving === 1) {
+    if (isMoving === 3 || isMoving === 2) {
       setInitialImg(URL.createObjectURL(event.target.files[0]));
     }
   };
@@ -262,6 +262,9 @@ const SeamCarver = () => {
   ) : null;
 
   const onChangeHeight = (event) => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
     if (event.target.value >= 100) {
       setToHeightScale(100);
     } else if (event.target.value <= 0) {
@@ -272,6 +275,9 @@ const SeamCarver = () => {
   };
 
   const onChangeWidth = (event) => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
     if (event.target.value >= 100) {
       setToWidthScale(100);
     } else if (event.target.value <= 0) {
@@ -282,6 +288,9 @@ const SeamCarver = () => {
   };
 
   const increaseHeightScale = (event) => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
     if (toHeightScale >= 100) {
       setToHeightScale(100);
     } else {
@@ -289,6 +298,9 @@ const SeamCarver = () => {
     }
   };
   const decreaseHeightScale = (event) => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
     if (toHeightScale <= 0) {
       setToHeightScale(0);
     } else {
@@ -296,6 +308,9 @@ const SeamCarver = () => {
     }
   };
   const increaseWidthScale = (event) => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
     if (toWidthScale >= 100) {
       setToHeightScale(100);
     } else {
@@ -303,6 +318,9 @@ const SeamCarver = () => {
     }
   };
   const decreaseWidthScale = (event) => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
     if (toWidthScale <= 0) {
       setToHeightScale(0);
     } else {
