@@ -1,0 +1,119 @@
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+.changeWidth {
+  position: absolute;
+  top: 7.5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+}
+
+.changeHeight {
+  position: absolute;
+  top: 50%;
+  left: 7.5%;
+  transform: translate(-50%, -50%);
+  color: white;
+}
+
+.upButton {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 42.5%;
+  left: 6.5%;
+  width: 5%;
+  background-color: transparent;
+  border: 0px;
+}
+.upButton:hover {
+  background-color: transparent;
+}
+.upButton:hover .fa-angle-up {
+  color: #397cbf;
+}
+.fa-angle-up {
+  transition: 0.3s;
+  position: inherit;
+  font-size: 80px;
+  color: #1e90ff;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+}
+.downButton {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 55%;
+  left: 6.5%;
+  width: 5%;
+  background-color: transparent;
+  border: 0px;
+}
+.downButton:hover {
+  background-color: transparent;
+}
+.downButton:hover .fa-angle-down {
+  color: #397cbf;
+}
+.fa-angle-down {
+  transition: 0.3s;
+  position: inherit;
+  font-size: 80px;
+  color: #1e90ff;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+}
+.leftButton {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 6.5%;
+  left: 46%;
+  width: 5%;
+  background-color: transparent;
+  border: 0px;
+}
+.leftButton:hover {
+  background-color: transparent;
+}
+.leftButton:hover .fa-angle-left {
+  color: #397cbf;
+}
+.fa-angle-left {
+  transition: 0.3s;
+  position: inherit;
+  font-size: 80px;
+  color: #1e90ff;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+}
+.rightButton {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  top: 6.5%;
+  left: 52.5%;
+  width: 5%;
+  background-color: transparent;
+  border: 0px;
+}
+.rightButton:hover {
+  background-color: transparent;
+}
+.rightButton:hover .fa-angle-right {
+  color: #397cbf;
+}
+.fa-angle-right {
+  transition: 0.3s;
+  position: inherit;
+  font-size: 80px;
+  color: #1e90ff;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+}

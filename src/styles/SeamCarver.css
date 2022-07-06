@@ -14,3 +14,14 @@
   height: 90vh;
   width: 85vw;
 }
+
+.sizes {
+  background-color: #1e90ff;
+  color: white;
+  left: 17vw;
+  width: 13vw;
+  margin: 15px !important;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid white;
+}

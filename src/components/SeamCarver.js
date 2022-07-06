@@ -1,17 +1,22 @@
 import "../styles/SeamCarver.css";
 import { useState, useEffect, useRef } from "react";
 import NavBar from "./NavBar";
+import ToSize from "./ToSize";
 import WorkingImage from "./WorkingImage";
 import WorkingCanvas from "./WorkingCanvas";
 import initialImage from "../balloons.jpg";
 import {
-  findFirstSeam,
-  findNextSeam,
+  findFirstVerticalSeam,
+  findNextVerticalSeam,
+  findFirstHorizontalSeam,
+  findNextHorizontalSeam,
+  drawHorizontalSeam,
   toTwoDData,
-  drawSeam,
-  removeSeam,
-} from "../utilities/resizingAlgorithms";
-import { wait } from "../utilities/wait";
+  drawVerticalSeam,
+  removeVerticalSeam,
+  removeHorizontalSeam,
+} from "../utils/resizingAlgorithms";
+import { wait } from "../utils/wait";
 
 const SeamCarver = () => {
   const defaultWidthScale = 50;
@@ -22,13 +27,21 @@ const SeamCarver = () => {
   const [canvasStaging, setCanvasStaging] = useState(false);
   const [toWidthScale, setToWidthScale] = useState(defaultWidthScale);
   const [toHeightScale, setToHeightScale] = useState(defaultHeightScale);
+  const [currentHeight, setCurrentHeight] = useState(null);
+  const [currentWidth, setCurrentWidth] = useState(null);
+  const [isMoving, setIsMoving] = useState(1);
+  const [tutorial, setTutorial] = useState(false);
 
   const imgRef = useRef();
   const canvasRef = useRef();
 
   useEffect(() => {
     function updateSize() {
-      setCanvasStaging(false);
+      if (imgRef.current !== null) {
+        setCanvasStaging(false);
+        setCurrentHeight(imgRef.current.height);
+        setCurrentWidth(imgRef.current.width);
+      }
     }
     window.addEventListener("resize", updateSize);
     return () => {
@@ -36,13 +49,29 @@ const SeamCarver = () => {
       setCanvasStaging(true);
     };
   });
+  useEffect(() => {
+    async function setSize() {
+      await wait(100);
+      setCurrentHeight(imgRef.current.height);
+      setCurrentWidth(imgRef.current.width);
+    }
+    if (imgRef.current != undefined) {
+      setSize();
+    }
+  }, [initialImg]);
 
   const onPictureClick = async () => {
-    setInitialImg(initialImage);
-    setCanvasStaging(true);
+    if (isMoving === 1) {
+      setInitialImg(initialImage);
+      setCanvasStaging(true);
+    }
   };
 
   const resize = async () => {
+    if (isMoving === 2 || isMoving === 3) {
+      return;
+    }
+    setIsMoving(2);
     setInitialImg(null);
     const srcImg = imgRef.current;
     if (!srcImg) {
@@ -56,7 +85,6 @@ const SeamCarver = () => {
 
     const w = srcImg.width;
     const h = srcImg.height;
-    console.log(w, h);
 
     canvas.width = w;
     canvas.height = h;
@@ -71,23 +99,28 @@ const SeamCarver = () => {
     const newDataimg = context.getImageData(0, 0, w, h);
     let imgdata = newDataimg.data;
 
-    const toWidth = Math.floor((toWidthScale * w) / 100);
-    const toHeight = Math.floor((toHeightScale * h) / 100);
-
     let twoDData = toTwoDData({ imgdata, w, h });
 
-    let { lowestSeam, totalEnergyMap } = findFirstSeam({ twoDData });
+    let { lowestSeam, energyMap } = findFirstVerticalSeam({ twoDData });
 
-    const onIteration = async (lowestSeam, totalEnergyMap, twoDData, data) => {
-      let dataWithSeam = await drawSeam({ lowestSeam, data, w, h });
+    const onVerticalIteration = async (
+      energyMap,
+      lowestSeam,
+      twoDData,
+      data
+    ) => {
+      let dataWithSeam = drawVerticalSeam({ lowestSeam, data, w, h });
       let seamImage = new ImageData(new Uint8ClampedArray(dataWithSeam), w, h);
       context.putImageData(seamImage, 0, 0, 0, 0, w, h);
 
-      let { dataWithRemovedSeam, nextenergy, nexttwoD } = removeSeam({
-        lowestSeam,
-        totalEnergyMap,
-        twoDData,
-      });
+      let { dataWithRemovedSeam, nexttwoD, nextEnergyMap } = removeVerticalSeam(
+        {
+          lowestSeam,
+          twoDData,
+          energyMap,
+          w,
+        }
+      );
 
       await wait(1);
 
@@ -99,27 +132,120 @@ const SeamCarver = () => {
 
       context.putImageData(dataWithRemovedSeamImage, 0, 0, 0, 0, w, h);
       twoDData = nexttwoD;
-      let { lowestSeam: nextLowestSeam, totalEnergyMap: nextEnergyMap } =
-        findFirstSeam({ twoDData });
+      let { nextLowestSeam, energyMapToReturn } =
+        findNextVerticalSeam(nextEnergyMap);
 
-      return { nextLowestSeam, nextEnergyMap, nexttwoD, dataWithRemovedSeam };
+      return {
+        nextLowestSeam,
+        energyMapToReturn,
+        nexttwoD,
+        dataWithRemovedSeam,
+      };
     };
-    let s = 5;
-
-    while (s > 0) {
-      let { nextLowestSeam, nextEnergyMap, nexttwoD, dataWithRemovedSeam } =
-        await onIteration(lowestSeam, totalEnergyMap, twoDData, imgdata);
+    let toWidth = w - Math.floor((toWidthScale * w) / 100);
+    let removed = 1;
+    while (toWidth > 0) {
+      let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
+        await onVerticalIteration(energyMap, lowestSeam, twoDData, imgdata);
       lowestSeam = nextLowestSeam;
-      totalEnergyMap = nextEnergyMap;
       twoDData = nexttwoD;
       imgdata = dataWithRemovedSeam;
+      energyMap = energyMapToReturn;
+      toWidth -= 1;
+      setCurrentWidth(w - removed);
+      removed += 1;
     }
+
+    let newWidth = Math.floor((toWidthScale * w) / 100);
+
+    let twoDDataH = toTwoDData({ imgdata, w, h });
+
+    let { lowestSeamH, energyMapH } = findFirstHorizontalSeam({ twoDDataH });
+
+    const onHorizontalIteration = async (
+      energyMap,
+      lowestSeam,
+      twoDData,
+      data
+    ) => {
+      let dataWithSeam = drawHorizontalSeam({ lowestSeam, data, w, newWidth });
+
+      let seamImage = new ImageData(new Uint8ClampedArray(dataWithSeam), w, h);
+      context.putImageData(seamImage, 0, 0, 0, 0, w, h);
+
+      let { dataWithRemovedSeam, nexttwoD, nextEnergyMap } =
+        removeHorizontalSeam({
+          lowestSeam,
+          twoDData,
+          energyMap,
+          h,
+        });
+
+      await wait(1);
+
+      let dataWithRemovedSeamImage = new ImageData(
+        new Uint8ClampedArray(dataWithRemovedSeam),
+        w,
+        h
+      );
+
+      context.putImageData(dataWithRemovedSeamImage, 0, 0, 0, 0, w, h);
+      twoDData = nexttwoD;
+
+      let { nextLowestSeam, energyMapToReturn } =
+        findNextHorizontalSeam(nextEnergyMap);
+
+      return {
+        nextLowestSeam,
+        energyMapToReturn,
+        nexttwoD,
+        dataWithRemovedSeam,
+      };
+    };
+
+    let toHeight = h - Math.floor((toHeightScale * h) / 100);
+    removed = 1;
+    while (toHeight > 0) {
+      let { nextLowestSeam, nexttwoD, dataWithRemovedSeam, energyMapToReturn } =
+        await onHorizontalIteration(
+          energyMapH,
+          lowestSeamH,
+          twoDDataH,
+          imgdata
+        );
+      lowestSeamH = nextLowestSeam;
+      twoDDataH = nexttwoD;
+      imgdata = dataWithRemovedSeam;
+      energyMapH = energyMapToReturn;
+      toHeight -= 1;
+      setCurrentHeight(h - removed);
+      removed += 1;
+    }
+    setIsMoving(3);
   };
 
-  const onFinish = () => {};
-
+  const resetStates = () => {
+    if (isMoving === 3 || isMoving === 1) {
+      setInitialImg(null);
+      setImageSize("imgLarge");
+      setCanvasStaging(false);
+      setCurrentHeight(null);
+      setCurrentWidth(null);
+      setIsMoving(1);
+    }
+  };
+  const uploadFile = (event) => {
+    if (isMoving === 3 || isMoving === 1) {
+      setInitialImg(URL.createObjectURL(event.target.files[0]));
+    }
+  };
   const navbar = (
-    <NavBar createCanvas={resize} onPictureClick={onPictureClick}></NavBar>
+    <NavBar
+      resetAll={resetStates}
+      createCanvas={resize}
+      onPictureClick={onPictureClick}
+      uploadPhoto={uploadFile}
+    ></NavBar>
   );
 
   const originalImage = initialImg ? (
@@ -135,10 +261,91 @@ const SeamCarver = () => {
     </WorkingCanvas>
   ) : null;
 
+  const onChangeHeight = (event) => {
+    if (event.target.value >= 100) {
+      setToHeightScale(100);
+    } else if (event.target.value <= 0) {
+      setToHeightScale(0);
+    } else {
+      setToHeightScale(event.target.value);
+    }
+  };
+
+  const onChangeWidth = (event) => {
+    if (event.target.value >= 100) {
+      setToWidthScale(100);
+    } else if (event.target.value <= 0) {
+      setToWidthScale(0);
+    } else {
+      setToWidthScale(event.target.value);
+    }
+  };
+
+  const increaseHeightScale = (event) => {
+    if (toHeightScale >= 100) {
+      setToHeightScale(100);
+    } else {
+      setToHeightScale(toHeightScale + 1);
+    }
+  };
+  const decreaseHeightScale = (event) => {
+    if (toHeightScale <= 0) {
+      setToHeightScale(0);
+    } else {
+      setToHeightScale(toHeightScale - 1);
+    }
+  };
+  const increaseWidthScale = (event) => {
+    if (toWidthScale >= 100) {
+      setToHeightScale(100);
+    } else {
+      setToWidthScale(toWidthScale + 1);
+    }
+  };
+  const decreaseWidthScale = (event) => {
+    if (toWidthScale <= 0) {
+      setToHeightScale(0);
+    } else {
+      setToWidthScale(toWidthScale - 1);
+    }
+  };
+
+  const resizeButtons = (
+    <div>
+      <ToSize
+        increaseHeight={increaseHeightScale}
+        decreaseHeight={decreaseHeightScale}
+        increaseWidth={increaseWidthScale}
+        decreaseWidth={decreaseWidthScale}
+        heightVal={toHeightScale}
+        widthVal={toWidthScale}
+        onChangeHeight={onChangeHeight}
+        onChangeWidth={onChangeWidth}
+      ></ToSize>
+    </div>
+  );
+
+  const currentSizes =
+    currentWidth == null ? (
+      <div className="sizes">
+        Current Width: 0 (px)
+        <br />
+        Current Height: 0 (px)
+      </div>
+    ) : (
+      <div className="sizes">
+        Current Width: {currentWidth} (px)
+        <br />
+        Current Height: {currentHeight} (px)
+      </div>
+    );
+
   return (
     <div className="main">
       {navbar}
       <div className="stage">
+        {currentSizes}
+        {resizeButtons}
         {originalImage}
         {workingCanvas}
       </div>
