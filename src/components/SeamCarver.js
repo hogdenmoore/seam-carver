@@ -61,14 +61,18 @@ const SeamCarver = () => {
   }, [initialImg]);
 
   const onPictureClick = async () => {
+    console.log(isMoving);
     if (isMoving === 1) {
+      console.log("i");
       setInitialImg(initialImage);
       setCanvasStaging(true);
     }
   };
-
   const resize = async () => {
-    if (isMoving === 2 || isMoving === 3) {
+    console.log(imgRef.current);
+    if (isMoving === 2 || isMoving === 3 || imgRef.current === null) {
+      setIsMoving(1);
+      console.log("p");
       return;
     }
     setIsMoving(2);
