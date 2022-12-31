@@ -235,7 +235,7 @@ const SeamCarver = () => {
     }
   };
   const uploadFile = (event) => {
-    if (isMoving === 3 || isMoving === 2) {
+    if (isMoving === 1) {
       setInitialImg(URL.createObjectURL(event.target.files[0]));
     }
   };
